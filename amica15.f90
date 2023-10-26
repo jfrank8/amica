@@ -216,8 +216,12 @@ call MPI_BCAST(lratefact,1,MPI_DOUBLE_PRECISION,0,seg_comm,ierr)
 call MPI_BCAST(rholratefact,1,MPI_DOUBLE_PRECISION,0,seg_comm,ierr)
 
 !--- set up the random number generator for this node
-call system_clock(c1)
-call random_seed(PUT = c1 * (myrank+1) * (seed+myrank+1))
+if (douserseed) then
+   call random_seed(PUT = userseed * (myrank+1) * (seed+myrank+1))
+else
+   call system_clock(c1)
+   call random_seed(PUT = c1 * (myrank+1) * (seed+myrank+1))
+end if
 !call DRANDINITIALIZE(1,1,(myrank+1)*(c1/tot_procs + 1),lseed,state,lstate,info)
 
 
@@ -985,13 +989,13 @@ do
       t0 = dble(c2-c1)/dble(counts_per_sec)
 
       if (mod(iter,outstep) == 0) then
-         print "(a,i6,a,f13.10,a,f14.10,a,f13.10,a,2(e13.5),a,f6.2,a,f5.1,a)",&
+         print "(a,i6,a,f13.10,a,f14.10,a,f13.10,a,2(e13.5),a,f6.2,a,a,i0,a,i0,a,i6,a,f5.1,a)",&
               ' iter', iter,' lrate = ', lrate, ' LL = ', LL(iter), &
               ' nd = ', ndtmpsum,', D = ', maxval(Dsum), minval(Dsum), &
-              '  (', t0, ' s, ', dble(max_iter-iter)*t0/dble(3600), ' h)'
-         write(20,"(a,i6,a,f13.10,a,f14.10,a,f13.10,a,2(e13.5),a,f6.2,a,f5.1,a)") ' iter', iter,' lrate = ', lrate,  ' LL = ', LL(iter), &
+              '  (', t0, ' s, ','c1 ', c1, ' c2 ',c2,' cps ', counts_per_sec, ' ', dble(max_iter-iter)*t0/dble(3600), ' h)'
+         write(20,"(a,i6,a,f13.10,a,f14.10,a,f13.10,a,2(e13.5),a,f6.2,a,a,i0,a,i0,a,i0,a,f5.1,a)") ' iter', iter,' lrate = ', lrate,  ' LL = ', LL(iter), &
               ' nd = ', ndtmpsum,', D = ', maxval(Dsum), minval(Dsum), &
-              '  (', t0, ' s, ', dble(max_iter-iter)*t0/dble(3600), ' h)'
+              '  (', t0, ' s, ','c1 ', c1, ' c2 ', c2, ' cps ', counts_per_sec,' ', dble(max_iter-iter)*t0/dble(3600), ' h)'
          call flush(6)
       end if
 
@@ -2302,6 +2306,8 @@ subroutine write_history
     write(21,rec=1) A; call flush(21); close(21)
     open(unit=22,file=trim(outdirparam)//'/history/'//trim(adjustl(tmpstring))//'/'//outfile_comp_list,access='direct',status='replace',recl=2*nbyte*nw*num_models)
     write(22,rec=1) comp_list; call flush(21); close(22)
+    open(unit=17,file=trim(outdirparam)//'/history/'//trim(adjustl(tmpstring))//'/'//outfile_LL,access='direct',status='replace',recl=2*nbyte*max(1,max_iter))
+    write(17,rec=1) LL; call flush(17); close(17)
  end if
 end subroutine write_history
 
@@ -3675,6 +3681,10 @@ subroutine get_cmd_args
         read(tmparg,'(a)') outdirparam
      case('indir')
         read(tmparg,'(a)') indirparam
+    case('userseed')
+        read(tmparg,'(i12)') userseed
+        douserseed = .true.
+        print *, 'userseed = ', userseed; call flush(6)
      end select
 
   end do

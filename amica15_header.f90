@@ -11,7 +11,7 @@ end type data_segment
 type(data_segment), allocatable :: dataseg(:)
 
 logical :: do_approx_sphere = .true.
-logical :: do_sphere = .true., do_mean = .true., dorho = .true., doscaling = .true., print_debug = .false.
+logical :: do_sphere = .true., do_mean = .true., dorho = .true., doscaling = .true., douserseed = .false., print_debug = .false.
 logical :: leave = .false., update_mu = .true., update_beta = .true., update_A = .true., fix_init = .false.
 logical :: doPCA = .false., load_rho = .false., load_A = .false., load_mu = .false., load_W = .false.
 logical :: load_beta = .false., load_alpha = .false., load_gm = .false., load_comp_list = .false.
@@ -72,7 +72,6 @@ double precision :: llvar = 0.0, llsig = 0.0, llvarsum = 0.0, llmean = 0.0
 double precision :: llmeansum = 0.0, llmax, llmin, invsigmin = 0.0001
 double precision :: newtrate = 0.5, epsdble = 1.0e-16, sk1, sk2, natrate, minhess = 1.0e-5
 double precision :: usum, tmpsum, vsum, dkap, comp_thresh = 0.99, min_dll = 1.0e-9, min_nd = 1.0e-7
-
 integer :: num_comps = -1, num_mix = 3, num_mix_init = 3, share_iter = 100, share_start = 100, blk_min = 128, blk_max = 1024
 integer :: data_dim, N1, h, hh, t, flen, numgood, numgoodsum, ngood, maxchpdf, blk_step = 128
 integer :: numchpdf, chpdfint, chpdfstart, pcakeep
@@ -98,7 +97,7 @@ INTEGER :: seed(2) = (/ 123456, 654321 /)
 INTEGER :: numargs, argnum, filenum, filestart, filestop, sampnum, sampstart
 integer :: sampstop, blknum, blocknum, fld1, fld2, num_blocks
 INTEGER :: i, j, k
-integer :: ii, jj, kk, c0, c1, c2
+integer :: ii, jj, kk, c0, c1, c2, userseed
 integer :: counts_per_sec=0, cnt1=0, cnt2=0
 INTEGER :: iter, len, fh, info, lwork, lstate=16, state(16), lseed = 1
 integer :: host_num, ip(4), name_len
